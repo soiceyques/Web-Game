@@ -22,6 +22,9 @@ npx serve .
 | Right click / Space | Force push (knocks back and stuns nearby zombies) |
 | Shift | Dash |
 | P / Esc | Pause |
+| M | Toggle mouse-follow movement |
+
+**Mouse-follow mode** (toggle with `M` or the button on the title screen; the choice is remembered): the player walks toward the cursor, faster the farther it is, and stops when the cursor is close. WASD still overrides it while held, and Dash goes toward the cursor.
 
 ## Playing on iPhone / iPad
 

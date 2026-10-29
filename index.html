@@ -38,6 +38,10 @@
   .sub { font-size: 14px; letter-spacing: 0.3em; opacity: 0.7; margin-bottom: 36px; text-transform: uppercase; }
   .controls { display: grid; grid-template-columns: auto auto; gap: 8px 22px; font-size: 13px; letter-spacing: 0.08em; margin-bottom: 32px; text-align: left; opacity: 0.85; }
   .controls span:nth-child(odd) { color: #9ad4ff; text-align: right; font-weight: 700; }
+  button.opt { font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: #e8e8f0; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; padding: 9px 18px; margin-bottom: 26px; cursor: pointer; transition: background .15s, border-color .15s; }
+  button.opt:hover { background: rgba(255,255,255,0.14); }
+  button.opt.on { border-color: #9ad4ff; color: #9ad4ff; box-shadow: 0 0 14px rgba(120,190,255,0.45); }
   .colors { display: flex; gap: 14px; margin-bottom: 30px; }
   .swatch { width: 44px; height: 44px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: transform .15s, border-color .15s; box-shadow: 0 0 18px var(--c); background: var(--c); }
   .swatch:hover { transform: scale(1.15); }
@@ -150,11 +154,13 @@
   </div>
   <div class="controls desktop-only">
     <span>WASD / Arrows</span><span>Move</span>
-    <span>Mouse</span><span>Aim saber</span>
+    <span>Mouse</span><span id="mouseRole">Aim saber</span>
     <span>Left Click</span><span>Swing</span>
     <span>Right Click / Space</span><span>Force push</span>
     <span>Shift</span><span>Dash</span>
+    <span>M</span><span>Toggle mouse-follow</span>
   </div>
+  <button class="opt desktop-only" id="followbtn" type="button"></button>
   <div class="label" style="margin-bottom:12px">Choose your blade</div>
   <div class="colors" id="colors"></div>
   <button class="btn" id="startbtn">Ignite</button>
@@ -257,10 +263,26 @@ function sfx(type) {
 // ---------- Input ----------
 const keys = {};
 const mouse = { x: W / 2, y: H / 2, down: false };
+
+// Mouse-follow: the player walks toward the cursor, faster the farther it is. WASD overrides while held.
+const FOLLOW_DEAD = 40, FOLLOW_FULL = 170;
+let mouseFollow = false;
+try { mouseFollow = localStorage.getItem('saberFollow') === '1'; } catch (_) {}
+function setFollow(on) {
+  mouseFollow = on;
+  try { localStorage.setItem('saberFollow', on ? '1' : '0'); } catch (_) {}
+  const b = document.getElementById('followbtn');
+  b.textContent = 'Mouse-follow movement: ' + (on ? 'ON' : 'OFF');
+  b.classList.toggle('on', on);
+  document.getElementById('mouseRole').textContent = on ? 'Aim saber & walk toward cursor' : 'Aim saber';
+}
+document.getElementById('followbtn').onclick = () => setFollow(!mouseFollow);
+setFollow(mouseFollow);
 window.addEventListener('keydown', e => {
   keys[e.code] = true;
   if (e.code === 'Space') { e.preventDefault(); if (state === 'playing') forcePush(); }
   if (e.code === 'KeyP' || e.code === 'Escape') togglePause();
+  if (e.code === 'KeyM' && !e.repeat) setFollow(!mouseFollow);
   if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') { if (state === 'playing') dash(); }
 });
 window.addEventListener('keyup', e => { keys[e.code] = false; });
@@ -456,6 +478,7 @@ function dash() {
   if (keys.KeyW || keys.ArrowUp) dy -= 1; if (keys.KeyS || keys.ArrowDown) dy += 1;
   if (keys.KeyA || keys.ArrowLeft) dx -= 1; if (keys.KeyD || keys.ArrowRight) dx += 1;
   if (!dx && !dy && (joy.x || joy.y)) { dx = joy.x; dy = joy.y; }
+  if (!dx && !dy && mouseFollow && !usingTouch) { dx = mouse.x - player.x; dy = mouse.y - player.y; }
   if (!dx && !dy) { dx = Math.cos(player.angle); dy = Math.sin(player.angle); }
   const l = Math.hypot(dx, dy); dx /= l; dy /= l;
   player.dashTime = 0.16; player.dashVx = dx * 1100; player.dashVy = dy * 1100; player.dashCd = 1.1; player.invuln = Math.max(player.invuln, 0.2);
@@ -540,6 +563,13 @@ function update(dt) {
   if (keys.KeyA || keys.ArrowLeft) mx -= 1; if (keys.KeyD || keys.ArrowRight) mx += 1;
   if (mx || my) { const l = Math.hypot(mx, my); mx /= l; my /= l; }
   if (joy.id !== null && (joy.x || joy.y)) { mx = joy.x; my = joy.y; }
+  if (mouseFollow && !usingTouch && !mx && !my) {
+    const fx = mouse.x - p.x, fy = mouse.y - p.y, fd = Math.hypot(fx, fy);
+    if (fd > FOLLOW_DEAD) {
+      const f = Math.min(1, (fd - FOLLOW_DEAD) / (FOLLOW_FULL - FOLLOW_DEAD));
+      mx = fx / fd * f; my = fy / fd * f;
+    }
+  }
   if (p.dashTime > 0) {
     p.dashTime -= dt; p.x += p.dashVx * dt; p.y += p.dashVy * dt;
     trails.push({ x: p.x, y: p.y, life: 0.25, r: p.r });
