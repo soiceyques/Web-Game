@@ -52,6 +52,8 @@
     box-shadow: 0 0 24px rgba(120,190,255,0.7); transition: transform .12s, box-shadow .12s;
   }
   button.btn:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(120,190,255,1); }
+  a.modelink { margin-top: 22px; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: #9ad4ff; opacity: 0.75; text-decoration: none; border-bottom: 1px solid rgba(154,212,255,0.4); padding-bottom: 3px; }
+  a.modelink:hover { opacity: 1; }
   .stats { font-size: 16px; letter-spacing: 0.15em; line-height: 2; margin-bottom: 28px; }
   .stats b { color: #ffd166; }
   #hud { position: absolute; top: 0; left: 0; right: 0; display: flex;
@@ -107,6 +109,7 @@
     .swatch { width: 32px; height: 32px; }
     .stats { font-size: 13px; line-height: 1.6; margin-bottom: 12px; }
     button.btn { font-size: 15px; padding: 10px 34px; }
+    a.modelink { margin-top: 12px; font-size: 10px; }
     .bar { width: 150px; height: 10px; }
     .value { font-size: 20px; }
     .label { font-size: 9px; }
@@ -164,6 +167,7 @@
   <div class="label" style="margin-bottom:12px">Choose your blade</div>
   <div class="colors" id="colors"></div>
   <button class="btn" id="startbtn">Ignite</button>
+  <a class="modelink" href="fps.html">Try first-person mode (3D)</a>
 </div>
 
 <div id="gameover" class="overlay hidden">
@@ -175,6 +179,7 @@
     Best combo <b id="finalcombo">0</b>
   </div>
   <button class="btn" id="restartbtn">Rise Again</button>
+  <a class="modelink" href="fps.html">Try first-person mode (3D)</a>
 </div>
 
 <script>
